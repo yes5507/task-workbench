@@ -341,13 +341,13 @@ const GH_USER='yes5507',GH_REPO='task-workbench',GH_FILE='data.json';
 let GH_TOKEN='';function _gt(){if(GH_TOKEN)return GH_TOKEN;let a=['ghp','_iPyTZgp8b5IjI','1clW54DobrQeqNmp80','r0TUV'];GH_TOKEN=a.join('');return GH_TOKEN}
 let _ghReady=false,_ghSyncing=false,_ghSha=null;
 function ghInit(){_ghReady=true;document.getElementById('sync-text').textContent='已连接云端';document.getElementById('sync-dot').className='sync-dot saved'}
-function ghFetch(){let t=_gt();if(!t)return Promise.resolve(null);return fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'token '+t,'Accept':'application/vnd.github.v3+json','User-Agent':'TaskWB'}}).then(r=>r.json()).then(d=>{if(d.content){_ghSha=d.sha;return JSON.parse(atob(d.content.replace(/\s/g,'')))}return null}).catch(()=>null)}
-async function ghSave(data){if(!_ghReady||_ghSyncing)return;_ghSyncing=true;try{let t=_gt();if(!t){_ghSyncing=false;return}let body=JSON.stringify({message:'auto-save '+new Date().toLocaleString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(data)))),sha:_ghSha});let r=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'token '+t,'Accept':'application/vnd.github.v3+json','User-Agent':'TaskWB','Content-Type':'application/json'},body});if(r.ok){let j=await r.json();_ghSha=j.content.sha;uss('saved')}else uss('error')}catch(e){uss('error')}_ghSyncing=false}
+function ghFetch(){let t=_gt();if(!t)return Promise.resolve(null);return fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json()).then(d=>{if(d&&d.content){_ghSha=d.sha;return JSON.parse(atob(d.content.replace(/\s/g,'')))}return null}).catch(e=>{console.warn('Cloud fetch:',e.message);return null})}
+async function ghSave(data){if(!_ghReady||_ghSyncing)return;_ghSyncing=true;try{let t=_gt();if(!t){_ghSyncing=false;uss('saved');return}let j=JSON.stringify(data);let body=JSON.stringify({message:'auto-save',content:btoa(unescape(encodeURIComponent(j))),sha:_ghSha,branch:'main'});let r=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',mode:'cors',headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json;charset=utf-8'},body});if(r.ok){let d=await r.json();_ghSha=d.content.sha;uss('saved');console.log('Cloud saved:',j.length,'bytes')}else{let err=await r.text();console.warn('Cloud save failed:',r.status,err);uss('local')}}catch(e){console.warn('Cloud save error:',e.message);uss('local')}_ghSyncing=false}
 // Hash sync
 function sth(){try{let j=JSON.stringify(tasks);let c=btoa(unescape(encodeURIComponent(j)));window.location.hash='data='+c;localStorage.setItem(SK,j);ghSave(tasks)}catch(e){localStorage.setItem(SK,JSON.stringify(tasks));uss('saved')}}
 async function lfh(){let loaded=false;let h=window.location.hash;if(h.startsWith('#data=')){try{let j=decodeURIComponent(escape(atob(h.slice(6))));let d=JSON.parse(j);if(Array.isArray(d)){tasks=d;localStorage.setItem(SK,j);loaded=true}}catch(e){}}if(!loaded){try{let r=localStorage.getItem(SK);if(r){tasks=JSON.parse(r);loaded=true}}catch(e){}}if(!loaded){try{let cd=await ghFetch();if(cd&&Array.isArray(cd)){tasks=cd;localStorage.setItem(SK,JSON.stringify(cd));loaded=true;document.getElementById('sync-text').textContent='从云端加载';}}catch(e){}}ghInit();return loaded}
 function sd(){try{localStorage.setItem(SK,JSON.stringify(tasks))}catch(e){}uss('saving');clearTimeout(window._st);window._st=setTimeout(sth,300)}
-function uss(s){let d=document.getElementById('sync-dot'),t=document.getElementById('sync-text');if(d){d.className='sync-dot '+(s==='saved'?'saved':'saving');t.textContent=s==='saved'?'已保存云端':s==='error'?'保存失败':s==='saving'?'保存中...':'已连接云端'}}
+function uss(s){let d=document.getElementById('sync-dot'),t=document.getElementById('sync-text');if(d){d.className='sync-dot '+(s==='saved'?'saved':s==='local'?'saved':s==='error'?'saving':'saving');t.textContent=s==='saved'?'已保存云端':s==='local'?'已保存本地':s==='error'?'保存失败':s==='saving'?'保存中...':'已连接云端'}}
 // Columns
 const COLS=[{k:'checkbox',l:'\u72b6\u6001',w:'44px',c:true},{k:'dept',l:'\u9700\u6c42\u79d1\u5ba4',w:'120px'},{k:'task',l:'\u5de5\u4f5c\u4efb\u52a1',w:'200px'},{k:'followup',l:'\u8ddf\u8fdb\u5de5\u4f5c',w:'200px'},{k:'startTime',l:'\u5f00\u59cb\u65f6\u95f4',w:'140px'},{k:'completedDate',l:'\u5b9e\u9645\u5b8c\u6210\u65e5\u671f',w:'140px'},{k:'interval',l:'\u65f6\u95f4\u95f4\u9694',w:'100px'},{k:'alarms',l:'\u95f9\u94c3',w:'100px',c:true},{k:'actions',l:'\u64cd\u4f5c',w:'70px',c:true}];
 let cols;
@@ -390,7 +390,17 @@ function ral(){let t=tasks.find(t=>t.id===aid);if(!t)return;let c=document.getEl
 function aa(){let t=tasks.find(t=>t.id===aid);if(!t)return;let ti=document.getElementById('alarm-time-input').value;if(!ti){st('\u8bf7\u9009\u62e9\u65f6\u95f4','error');return}let at=new Date(ti);if(isNaN(at.getTime())){st('\u65f6\u95f4\u65e0\u6548','error');return}if(!t.alarms)t.alarms=[];t.alarms.push({id:'a'+Date.now()+'_'+Math.random().toString(36).slice(2,6),time:at.toISOString(),triggered:false});sd();ral();ra();st('\u95f9\u94c3\u5df2\u6dfb\u52a0')}
 function rma(aid){let t=tasks.find(t=>t.id===aid);if(!t||!t.alarms)return;t.alarms=t.alarms.filter(a=>a.id!==aid);sd();ral();ra();st('\u95f9\u94c3\u5df2\u5220\u9664')}
 function cka(){let now=new Date(),ch=false;tasks.forEach(t=>{if(t.completed)return;if(!t.alarms)return;t.alarms.forEach(a=>{if(!a.triggered&&new Date(a.time)<=now){a.triggered=true;ch=true;sap(t,a)}})});if(ch)sd()}
-function sap(task,alarm){let pid='popup_'+alarm.id;document.getElementById('alarm-popup-container').insertAdjacentHTML('beforeend','<div class="alarm-popup" id="'+pid+'"><div class="alarm-popup-header"><div class="alarm-popup-icon">\u23f0</div><div class="alarm-popup-title">\u4efb\u52a1\u63d0\u9192</div></div><div class="alarm-popup-body"><div class="alarm-popup-task">'+eh(task.task||'\u672a\u547d\u540d')+'</div><div class="alarm-popup-desc">\u79d1\u5ba4\uff1a'+eh(task.dept||'\u2014')+'<br>\u5f00\u59cb\uff1a'+fdt(task.startTime)+'<br>\u63d0\u9192\uff1a'+fdt(alarm.time)+'</div></div><div class="alarm-popup-footer"><button class="alarm-popup-btn alarm-popup-dismiss" data-action="da" data-id="'+pid+'">\u7a0d\u540e</button><button class="alarm-popup-btn alarm-popup-complete" data-action="cfa" data-id="'+pid+'" data-tid="'+task.id+'">\u6807\u8bb0\u5b8c\u6210</button></div></div>');pb()}
+// Request notification permission on first interaction
+let _notifOk=false;
+function rn(){if(!('Notification' in window))return;if(Notification.permission==='granted'){_notifOk=true;return}if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{_notifOk=p==='granted'})}}
+function sap(task,alarm){let pid='popup_'+alarm.id;
+  // 1. Show in-page popup
+  document.getElementById('alarm-popup-container').insertAdjacentHTML('beforeend','<div class="alarm-popup" id="'+pid+'"><div class="alarm-popup-header"><div class="alarm-popup-icon">\u23f0</div><div class="alarm-popup-title">任务提醒</div></div><div class="alarm-popup-body"><div class="alarm-popup-task">'+eh(task.task||'未命名')+'</div><div class="alarm-popup-desc">科室：'+eh(task.dept||'—')+'<br>开始：'+fdt(task.startTime)+'<br>提醒：'+fdt(alarm.time)+'</div></div><div class="alarm-popup-footer"><button class="alarm-popup-btn alarm-popup-dismiss" data-action="da" data-id="'+pid+'">稍后</button><button class="alarm-popup-btn alarm-popup-complete" data-action="cfa" data-id="'+pid+'" data-tid="'+task.id+'">标记完成</button></div></div>');
+  // 2. System notification (shows in taskbar)
+  rn();
+  if(_notifOk){try{new Notification('⏰ 任务提醒',{body:(task.task||'未命名')+' | '+(task.dept||''),icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="%23fbbf24"/><text x="50" y="62" text-anchor="middle" font-size="40">⏰</text></svg>',tag:'taskwb-alarm',requireInteraction:true})}catch(e){}}
+  // 3. Sound
+  pb()}
 function da(pid){let el=document.getElementById(pid);if(el){el.style.animation='slideInRight .3s ease reverse';setTimeout(()=>el.remove(),280)}}
 function cfa(pid,tid){tc(tid);da(pid)}
 function pb(){try{let ac=new(window.AudioContext||window.webkitAudioContext)();[0,0.2,0.4].forEach(t=>{let o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0,ac.currentTime+t);g.gain.linearRampToValueAtTime(0.3,ac.currentTime+t+0.01);g.gain.linearRampToValueAtTime(0,ac.currentTime+t+0.15);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.15)})}catch(e){}}
@@ -406,7 +416,24 @@ function sf(f){cf=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classL
 // Toast & Fullscreen & Pin
 function st(msg,type='info'){let t=document.createElement('div');t.className='toast';if(type==='error')t.style.background='var(--danger)';else if(type==='success')t.style.background='var(--success)';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 function tfs(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}
-function taot(){let btn=document.getElementById('top-btn');if(document.pictureInPictureElement){document.exitPictureInPicture();btn.classList.remove('pinned');st('\u5df2\u53d6\u6d88\u7f6e\u9876')}else{let cvs=document.createElement('canvas');cvs.width=1;cvs.height=1;cvs.getContext('2d').fillRect(0,0,1,1);document.body.appendChild(cvs);cvs.requestPictureInPicture().then(()=>{btn.classList.add('pinned');st('\u5df2\u7f6e\u9876\u60ac\u6d6e');document.body.removeChild(cvs)}).catch(()=>{document.body.removeChild(cvs);st('\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\uff0c\u8bf7\u4e0b\u8f7d\u672c\u5730\u7248','error')})}}
+let _pinWin=null,_pinVisible=true;
+function taot(){let btn=document.getElementById('top-btn');
+  if(_pinWin&&!_pinWin.closed){_pinWin.close();_pinWin=null;btn.classList.remove('pinned');st('已取消置顶');_pinVisible=false;return}
+  _pinVisible=true;
+  // Create a compact always-on-top mini window
+  _pinWin=window.open('','_taskwb_pin','width=360,height=120,top=0,left='+(screen.width-380)+',alwaysOnTop=yes,resizable=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no');
+  if(!_pinWin||_pinWin.closed){st('请允许弹窗后重试','error');_pinWin=null;return}
+  _pinWin.document.write('<html><head><style>body{margin:0;font:13px -apple-system,sans-serif;background:#222;color:#fff;cursor:move;user-select:none;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;height:100%;box-sizing:border-box;border-radius:0} .close-btn{width:28px;height:28px;border:none;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;cursor:pointer;font-size:16px;transition:background .2s} .close-btn:hover{background:rgba(255,255,255,.3)}</style></head><body id="pin-body"><div><div style="font-size:11px;opacity:.6;margin-bottom:3px">任务工作台 · 置顶</div><div id="pin-status" style="font-size:15px;font-weight:600">运行中</div></div><button class="close-btn" onclick="window.close()">×</button></body></html>');
+  _pinWin.document.close();
+  function updatePin(){if(!_pinWin||_pinWin.closed){_pinWin=null;_pinVisible=false;btn.classList.remove('pinned');return}
+    let p=tasks.filter(t=>!t.completed).length,d=tasks.filter(t=>t.completed).length;
+    let el=_pinWin.document.getElementById('pin-status');
+    if(el)el.textContent=p+' 处理中 | '+d+' 已完成';
+  }
+  updatePin();setInterval(updatePin,5000);
+  btn.classList.add('pinned');st('已置顶悬浮窗');
+  _pinWin.onbeforeunload=function(){_pinWin=null;_pinVisible=false;btn.classList.remove('pinned')};
+}
 // RenderAll
 function ra(){rt();if(cv==='week')rw();us()}
 // Init
@@ -417,7 +444,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));if(e.key==='n'&&!e.target.matches('input,textarea,[contenteditable]')){e.preventDefault();oamodal()}});
 
 // Event delegation for table and calendar clicks
-document.addEventListener('click',function(e){
+document.addEventListener('click',function(e){rn();
   let el=e.target.closest('[data-action]');
   if(!el)return;
   let action=el.dataset.action,id=el.dataset.id,tid=el.dataset.tid;
@@ -437,7 +464,7 @@ document.addEventListener('click',function(e){
 });
 
 // Event delegation for all data-action clicks
-document.addEventListener('click',function(e){
+document.addEventListener('click',function(e){rn();
   let el=e.target.closest('[data-action]');
   if(!el)return;
   let a=el.dataset.action,id=el.dataset.id,tid=el.dataset.tid;
@@ -449,7 +476,7 @@ document.addEventListener('click',function(e){
 });
 
 // Event delegation for data-action clicks
-document.addEventListener('click',function(e){
+document.addEventListener('click',function(e){rn();
   let el=e.target.closest('[data-action]');
   if(!el)return;
   let a=el.dataset.action,id=el.dataset.id,tid=el.dataset.tid;
