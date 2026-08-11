@@ -342,10 +342,30 @@ let GH_TOKEN='';function _gt(){if(GH_TOKEN)return GH_TOKEN;let a=['ghp','_iPyTZg
 let _ghReady=false,_ghSyncing=false,_ghSha=null;
 function ghInit(){_ghReady=true;document.getElementById('sync-text').textContent='已连接云端';document.getElementById('sync-dot').className='sync-dot saved'}
 function ghFetch(){let t=_gt();if(!t)return Promise.resolve(null);return fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json()).then(d=>{if(d&&d.content){_ghSha=d.sha;return JSON.parse(atob(d.content.replace(/\s/g,'')))}return null}).catch(e=>{console.warn('Cloud fetch:',e.message);return null})}
-async function ghSave(data){if(!_ghReady||_ghSyncing)return;_ghSyncing=true;try{let t=_gt();if(!t){_ghSyncing=false;uss('saved');return}let j=JSON.stringify(data);let body=JSON.stringify({message:'auto-save',content:btoa(unescape(encodeURIComponent(j))),sha:_ghSha,branch:'main'});let r=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',mode:'cors',headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json;charset=utf-8'},body});if(r.ok){let d=await r.json();_ghSha=d.content.sha;uss('saved');console.log('Cloud saved:',j.length,'bytes')}else{let err=await r.text();console.warn('Cloud save failed:',r.status,err);uss('local')}}catch(e){console.warn('Cloud save error:',e.message);uss('local')}_ghSyncing=false}
+async function ghSave(data){if(_ghSyncing)return;_ghSyncing=true;
+  try{let t=_gt();if(!t){_ghSyncing=false;uss('local');return}
+    // Always fetch latest SHA first to avoid 409 conflict
+    let gResp=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}});
+    if(gResp.ok){let gData=await gResp.json();_ghSha=gData.sha}
+    let j=JSON.stringify(data);
+    let body=JSON.stringify({message:'auto-save',content:btoa(unescape(encodeURIComponent(j))),sha:_ghSha,branch:'main'});
+    let r=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json;charset=utf-8'},body});
+    if(r.ok){let d=await r.json();_ghSha=d.content.sha;uss('saved')}else{uss('local')}
+  }catch(e){uss('local')}
+  _ghSyncing=false}
 // Hash sync
-function sth(){try{let j=JSON.stringify(tasks);let c=btoa(unescape(encodeURIComponent(j)));window.location.hash='data='+c;localStorage.setItem(SK,j);ghSave(tasks)}catch(e){localStorage.setItem(SK,JSON.stringify(tasks));uss('saved')}}
-async function lfh(){let loaded=false;let h=window.location.hash;if(h.startsWith('#data=')){try{let j=decodeURIComponent(escape(atob(h.slice(6))));let d=JSON.parse(j);if(Array.isArray(d)){tasks=d;localStorage.setItem(SK,j);loaded=true}}catch(e){}}if(!loaded){try{let r=localStorage.getItem(SK);if(r){tasks=JSON.parse(r);loaded=true}}catch(e){}}if(!loaded){try{let cd=await ghFetch();if(cd&&Array.isArray(cd)){tasks=cd;localStorage.setItem(SK,JSON.stringify(cd));loaded=true;document.getElementById('sync-text').textContent='从云端加载';}}catch(e){}}ghInit();return loaded}
+function sth(){try{let j=JSON.stringify(tasks);let c=btoa(unescape(encodeURIComponent(j)));window.location.hash='data='+c;localStorage.setItem(SK,j);ghSave(tasks)}catch(e){try{localStorage.setItem(SK,JSON.stringify(tasks));uss('local')}catch(e2){}}}
+async function lfh(){let loaded=false;
+  // 1. URL hash (most reliable - copy link = copy data)
+  let h=window.location.hash;
+  if(h.startsWith('#data=')){try{let j=decodeURIComponent(escape(atob(h.slice(6))));let d=JSON.parse(j);if(Array.isArray(d)&&d.length>0){tasks=d;localStorage.setItem(SK,j);loaded=true;console.log('Loaded from URL hash:',d.length,'tasks')}}catch(e){}}
+  // 2. localStorage
+  if(!loaded){try{let r=localStorage.getItem(SK);if(r){let d=JSON.parse(r);if(Array.isArray(d)&&d.length>0){tasks=d;loaded=true;console.log('Loaded from localStorage:',d.length,'tasks')}}}catch(e){}}
+  // 3. GitHub cloud (only as fallback when local is empty)
+  if(!loaded){try{let cd=await ghFetch();if(cd&&Array.isArray(cd)&&cd.length>0){tasks=cd;localStorage.setItem(SK,JSON.stringify(cd));loaded=true;console.log('Loaded from cloud:',cd.length,'tasks')}}catch(e){}}
+  ghInit();
+  if(!loaded){console.log('No saved data found, starting fresh');tasks=[]}
+  return loaded}
 function sd(){try{localStorage.setItem(SK,JSON.stringify(tasks))}catch(e){}uss('saving');clearTimeout(window._st);window._st=setTimeout(sth,300)}
 function uss(s){let d=document.getElementById('sync-dot'),t=document.getElementById('sync-text');if(d){d.className='sync-dot '+(s==='saved'?'saved':s==='local'?'saved':s==='error'?'saving':'saving');t.textContent=s==='saved'?'已保存云端':s==='local'?'已保存本地':s==='error'?'保存失败':s==='saving'?'保存中...':'已连接云端'}}
 // Columns
@@ -437,8 +457,7 @@ function taot(){let btn=document.getElementById('top-btn');
 // RenderAll
 function ra(){rt();if(cv==='week')rw();us()}
 // Init
-if(!lfh())tasks=[];
-rh();ra();sth();
+(async function(){await lfh();rh();ra();sth()})();
 setInterval(cka,30000);setInterval(ra,60000);cka();
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));if(e.key==='n'&&!e.target.matches('input,textarea,[contenteditable]')){e.preventDefault();oamodal()}});
