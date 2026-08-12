@@ -95,7 +95,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--gray-9);font-size:
 .section-label.done{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green)}
 .section-label .count{font-size:10px;background:rgba(0,0,0,.06);color:var(--gray-7);padding:1px 7px;border-radius:10px;font-weight:550}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:var(--gray-1);color:var(--gray-6);font-weight:550;text-align:left;padding:9px 10px;border-bottom:var(--border);white-space:nowrap;font-size:10.5px;cursor:grab;user-select:none;letter-spacing:.04em;text-transform:uppercase}
+thead th{background:var(--gray-1);color:var(--gray-9);font-weight:650;text-align:left;padding:9px 10px;border-bottom:var(--border);white-space:nowrap;font-size:11px;cursor:grab;user-select:none;letter-spacing:.02em}
 thead th:active{cursor:grabbing}
 thead th.center{text-align:center}
 thead th.dragging{opacity:.35;background:var(--accent-subtle)}
@@ -374,15 +374,16 @@ const GH_USER='yes5507',GH_REPO='task-workbench',GH_FILE='data.json';
 let GH_TOKEN='';function _gt(){if(GH_TOKEN)return GH_TOKEN;let a=['ghp','_iPyTZgp8b5IjI','1clW54DobrQeqNmp80','r0TUV'];GH_TOKEN=a.join('');return GH_TOKEN}
 let _ghReady=false,_ghSyncing=false,_ghSha=null;
 function ghInit(){_ghReady=true;document.getElementById('sync-text').textContent='已连接云端';document.getElementById('sync-dot').className='sync-dot saved'}
-function ghFetch(){let t=_gt();if(!t)return Promise.resolve(null);return fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json()).then(d=>{if(d&&d.content){_ghSha=d.sha;return JSON.parse(atob(d.content.replace(/\s/g,'')))}return null}).catch(e=>{console.warn('Cloud fetch:',e.message);return null})}
+function _tf(url,opt,ms){ms=ms||8000;let c=new AbortController();let to=setTimeout(()=>c.abort(),ms);opt.signal=c.signal;return fetch(url,opt).finally(()=>clearTimeout(to))}
+function ghFetch(){let t=_gt();if(!t)return Promise.resolve(null);return _tf('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json()).then(d=>{if(d&&d.content){_ghSha=d.sha;return JSON.parse(atob(d.content.replace(/\s/g,'')))}return null}).catch(e=>{console.warn('Cloud fetch:',e.message);return null})}
 async function ghSave(data){if(_ghSyncing)return;_ghSyncing=true;
   try{let t=_gt();if(!t){_ghSyncing=false;uss('local');return}
     // Always fetch latest SHA first to avoid 409 conflict
-    let gResp=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}});
+    let gResp=await _tf('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json'}});
     if(gResp.ok){let gData=await gResp.json();_ghSha=gData.sha}
     let j=JSON.stringify(data);
     let body=JSON.stringify({message:'auto-save',content:btoa(unescape(encodeURIComponent(j))),sha:_ghSha,branch:'main'});
-    let r=await fetch('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json;charset=utf-8'},body});
+    let r=await _tf('https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json;charset=utf-8'},body});
     if(r.ok){let d=await r.json();_ghSha=d.content.sha;uss('saved')}else{uss('local')}
   }catch(e){uss('local')}
   _ghSyncing=false}
@@ -416,12 +417,37 @@ function gwr(){let now=new Date();now.setDate(now.getDate()+wo*7);let day=now.ge
 function rw(){let{mon}=gwr();let sun=new Date(mon);sun.setDate(mon.getDate()+6);document.getElementById('week-title').textContent=mon.getFullYear()+'\u5e74'+(mon.getMonth()+1)+'\u6708'+mon.getDate()+'\u65e5 \u2014 '+(sun.getMonth()+1)+'\u6708'+sun.getDate()+'\u65e5';let grid=document.getElementById('week-grid');let wd=['\u4e00','\u4e8c','\u4e09','\u56db','\u4e94','\u516d','\u65e5'];let today=new Date();today.setHours(0,0,0,0);let ts=today.toISOString().slice(0,10);let h='';for(let i=0;i<7;i++){let d=new Date(mon);d.setDate(mon.getDate()+i);let ds=d.toISOString().slice(0,10),it=ds===ts;let dtk=tasks.filter(t=>{if(!t.startTime)return false;let st=new Date(t.startTime);st.setHours(0,0,0,0);return st.toISOString().slice(0,10)===ds});dtk.sort((a,b)=>(b.important?1:0)-(a.important?1:0));h+='<div class="week-day"><div class="week-day-header'+(it?' today':'')+'"><div>\u5468'+wd[i]+'</div><div class="week-day-date">'+d.getDate()+'</div></div><div class="week-day-body">';if(dtk.length===0)h+='<div class="week-no-task">\u65e0\u4efb\u52a1</div>';else dtk.forEach(t=>{let cls='pending-item',dc='pending';if(t.completed){cls='done-item';dc='done'}if(t.important){cls='important-item';dc='important'}h+='<div class="week-task-item '+cls+'" data-action="est" data-id="'+t.id+'" title="'+eh((t.dept||'')+': '+(t.task||''))+'"><span class="week-task-dot '+dc+'"></span><span class="week-task-text">'+eh((t.dept||'?')+': '+(t.task||''))+'</span></div>'});h+='</div></div>'}grid.innerHTML=h}
 function cwk(n){wo+=n;rw()}function gcw(){wo=0;rw()}
 // Header
-function rh(){let h='<tr>';cols.forEach((c,i)=>{h+='<th class="'+(c.c?'center':'')+'" draggable="true" data-col="'+c.k+'" data-idx="'+i+'" style="width:'+c.w+'" title="拖拽调整顺序"><span class="col-grip" title="拖拽排序">⋮⋮</span>'+c.l+'<span class="col-resize" data-col="'+c.k+'" data-idx="'+i+'" title="拖动调整宽度"></span></th>'});h+='<th class="center" style="width:46px;background:var(--gray-2)"><span class="col-add" data-action="colmgr" title="列管理">⚙</span></th></tr>';document.getElementById('table-head').innerHTML=h}
+function rh(){let h='<tr>';cols.forEach((c,i)=>{h+='<th class="'+(c.c?'center':'')+'" data-col="'+c.k+'" data-idx="'+i+'" style="width:'+c.w+'" title="拖拽调整顺序"><span class="col-grip" title="拖拽排序">⋮⋮</span>'+c.l+'<span class="col-resize" data-col="'+c.k+'" data-idx="'+i+'" title="拖动调整宽度"></span></th>'});h+='<th class="center" style="width:46px;background:var(--gray-2)"><span class="col-add" data-action="colmgr" title="列管理">⚙</span></th></tr>';document.getElementById('table-head').innerHTML=h}
 let dc=null;
-function hds(e){dc=e.target.dataset.col;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
-function hdo(e){e.preventDefault();e.target.closest('th')?.classList.add('drag-over')}
-function hdd(e){e.preventDefault();document.querySelectorAll('th.drag-over').forEach(t=>t.classList.remove('drag-over'));let tc=e.target.closest('th')?.dataset.col;if(!tc||tc===dc||!dc)return;let fi=cols.findIndex(c=>c.k===dc),ti=cols.findIndex(c=>c.k===tc);if(fi===-1||ti===-1)return;let[m]=cols.splice(fi,1);cols.splice(ti,0,m);sco();rh();rt()}
-function hde(e){e.target.classList.remove('dragging');document.querySelectorAll('th.drag-over').forEach(t=>t.classList.remove('drag-over'));dc=null}
+// ===== Column drag reorder (pointer-based, reliable) =====
+let _hdrag=null,_dragGhost=null,_overIdx=-1;
+function hds(e){let grip=e.target.closest('.col-grip');if(!grip)return;e.preventDefault();
+  let th=grip.closest('th');let idx=parseInt(th.dataset.idx);
+  _hdrag={idx:idx,startX:e.clientX,col:cols[idx].k};
+  th.classList.add('dragging');
+}
+document.addEventListener('mousemove',function(e){
+  if(!_hdrag)return;
+  e.preventDefault();
+  let dx=e.clientX-_hdrag.startX;
+  if(Math.abs(dx)<8)return; // threshold to distinguish from click
+  // Find which column we're over
+  let ths=document.querySelectorAll('#table-head th[data-col]');
+  let newIdx=-1;
+  ths.forEach((th,i)=>{let r=th.getBoundingClientRect();if(e.clientX>=r.left&&e.clientX<=r.right)newIdx=i});
+  if(newIdx<0||newIdx===_hdrag.idx)return;
+  // Move the column
+  let[m]=cols.splice(_hdrag.idx,1);
+  cols.splice(newIdx,0,m);
+  _hdrag.idx=newIdx;
+  sco();rh();rt();
+});
+document.addEventListener('mouseup',function(){
+  if(_hdrag){
+    document.querySelectorAll('th.dragging').forEach(t=>t.classList.remove('dragging'));
+    _hdrag=null;
+  }
+});
 // Table
 function rt(){let tp=document.getElementById('task-tbody-pending'),td=document.getElementById('task-tbody-done'),es=document.getElementById('empty-state'),ts=document.querySelector('.table-scroll');let q=(document.getElementById('search-input').value||'').toLowerCase().trim();let f=tasks.slice();if(q)f=f.filter(t=>(t.dept||'').toLowerCase().includes(q)||(t.task||'').toLowerCase().includes(q)||(t.followup||'').toLowerCase().includes(q));if(cf==='pending')f=f.filter(t=>!t.completed);else if(cf==='done')f=f.filter(t=>t.completed);else if(cf==='important')f=f.filter(t=>t.important);f=stk(f);let pending=f.filter(t=>!t.completed),done=f.filter(t=>t.completed);if(f.length===0){tp.innerHTML='';td.innerHTML='';es.style.display='block';ts.style.display='none'}else{es.style.display='none';ts.style.display='block';let pendRows=pending.map(rr).join('');let doneRows=done.map(rr).join('');let showBoth=pending.length>0&&done.length>0;let pendHead=showBoth?'<tr class="section-label-row"><td colspan="'+cols.length+'"><div class="section-label pending">🟡 处理中 <span class="count">'+pending.length+'条</span></div></td></tr>':'';let doneHead=showBoth?'<tr class="section-label-row"><td colspan="'+cols.length+'"><div class="section-label done">✅ 已完成 <span class="count">'+done.length+'条</span></div></td></tr>':'';tp.innerHTML=pendHead+pendRows;td.innerHTML=doneHead+doneRows}document.getElementById('dept-list').innerHTML=gdl().map(d=>'<option value="'+eh(d)+'">').join('');us()}
 function rr(task){let iv=task.completed?'':civ(task.startTime),ih=iv?'<span class="interval-tag '+ivc(iv)+'">'+iv+'</span>':'<span style="color:var(--gray-400);font-size:12px">\u2014</span>';let ac=(task.alarms||[]).filter(a=>!a.triggered).length,ah='<button class="alarm-btn '+(ac>0?'has-alarms':'')+'" data-action="oam" data-id="'+task.id+'">\u23f0 '+(ac>0?ac:'+')+'</button>';let flag=task.important?'<span class="important-flag"></span>':'',tc=[task.completed?'completed':'',task.important?'important':''].filter(Boolean).join(' ');let cr={checkbox:()=>'<td class="checkbox-cell"><div class="task-checkbox '+(task.completed?'checked':'')+'" data-action="tc" data-id="'+task.id+'" title="'+(task.completed?'\u53d6\u6d88\u5b8c\u6210':'\u6807\u8bb0\u5b8c\u6210')+'"></div></td>',dept:()=>'<td><div class="cell-content" contenteditable="true" data-field="dept" data-id="'+task.id+'" onblur="ef(this)" onkeydown="hk(event)">'+flag+eh(task.dept||'')+'</div></td>',task:()=>'<td><div class="cell-content" contenteditable="true" data-field="task" data-id="'+task.id+'" onblur="ef(this)" onkeydown="hk(event)">'+eh(task.task||'')+'</div></td>',followup:()=>'<td><div class="cell-content" contenteditable="true" data-field="followup" data-id="'+task.id+'" onblur="ef(this)" onkeydown="hk(event)">'+eh(task.followup||'')+'</div></td>',startTime:()=>'<td><div class="cell-date" data-action="est" data-id="'+task.id+'" title="\u70b9\u51fb\u4fee\u6539">'+(task.startTime?fdt(task.startTime):'<span style="color:var(--gray-400)">\u2014</span>')+'</div></td>',completedDate:()=>'<td><div class="cell-date" data-action="ecd" data-id="'+task.id+'" title="\u70b9\u51fb\u4fee\u6539">'+(task.completedDate?fdate(task.completedDate):'<span style="color:var(--gray-400)">\u2014</span>')+'</div></td>',interval:()=>'<td>'+ih+'</td>',alarms:()=>'<td class="center">'+ah+'</td>',actions:()=>'<td class="center"><div class="action-btns"><button class="icon-btn star '+(task.important?'active':'')+'" data-action="ti" data-id="'+task.id+'" title="\u6807\u7ea2">\u2605</button><button class="icon-btn alarm" data-action="oam" data-id="'+task.id+'" title="\u95f9\u94c3">\u23f0</button><button class="icon-btn delete" data-action="dt" data-id="'+task.id+'" title="\u5220\u9664">\ud83d\uddd1</button></div></td>'};return'<tr class="'+tc+'" data-id="'+task.id+'">'+cols.map(c=>(cr[c.k]||(()=>'<td></td>'))()).join('')+'</tr>'}
@@ -540,9 +566,12 @@ document.addEventListener('click',function(e){rn();
   else if(a==='colmgr')openColMgr();else if(a==='save-colmgr')saveColMgr();else if(a==='close-colmgr')closeColMgr();else if(a==='add-col')addCustomCol();
 });
 
-// Column resize handler
+// Column resize + drag-reorder handlers
 let _resizeData=null;
 document.addEventListener('mousedown',function(e){
+  // Drag-reorder via grip handle
+  if(e.target.classList.contains('col-grip')){hds(e);return;}
+  // Resize via right edge handle
   if(!e.target.classList.contains('col-resize'))return;
   e.preventDefault();e.stopPropagation();
   let th=e.target.closest('th');
