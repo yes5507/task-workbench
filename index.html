@@ -100,20 +100,39 @@ thead th:active{cursor:grabbing}
 thead th.center{text-align:center}
 thead th.dragging{opacity:.35;background:var(--accent-subtle)}
 thead th.drag-over{border-left:2px solid var(--accent)}
-thead th{position:relative}
-.col-resize{position:absolute;right:-3px;top:0;width:6px;height:100%;cursor:col-resize;z-index:5;background:transparent;transition:background .15s}
-thead th:last-child .col-resize{display:none}
-.col-resize:hover,.col-resize.active{background:var(--accent);width:3px;right:0}
-.col-add{display:inline-block;width:24px;height:24px;line-height:22px;border-radius:5px;transition:all .15s}
-.col-add:hover{background:var(--accent);color:#fff !important}
-.col-manager{background:#fff;border-radius:12px;padding:20px;width:380px;box-shadow:var(--shadow-lg);border:var(--border)}
-.col-manager h3{font-size:15px;font-weight:620;margin-bottom:14px;letter-spacing:-.01em}
-.col-manager .col-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:4px;transition:background .15s}
-.col-manager .col-item:hover{background:var(--gray-1)}
-.col-manager .col-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
-.col-manager .col-item .name{flex:1;font-size:13px}
-.col-manager .col-item .width-input{width:60px;padding:3px 6px;border:var(--border);border-radius:4px;font-size:12px}
-.col-manager .actions{margin-top:14px;display:flex;gap:8px;justify-content:flex-end}
+thead th{position:relative;overflow:visible}
+.col-grip{display:inline-block;width:3px;height:14px;background:var(--gray-4);border-radius:2px;cursor:grab;margin-right:6px;vertical-align:middle;opacity:.5;transition:opacity .15s}
+thead th:hover .col-grip{opacity:1}
+thead th.dragging{opacity:.4}
+.col-resize{position:absolute;right:0;top:0;width:8px;height:100%;cursor:col-resize;z-index:10;background:transparent;transition:background .1s}
+.col-resize:hover,.col-resize.active{background:var(--accent);opacity:.6}
+.col-resize::after{content:'';position:absolute;right:3px;top:50%;transform:translateY(-50%);width:2px;height:60%;background:var(--gray-4);border-radius:1px;opacity:0;transition:opacity .1s}
+.col-resize:hover::after{opacity:1}
+.col-add{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;transition:all .15s;font-size:15px;color:var(--gray-5)}
+.col-add:hover{background:var(--accent);color:#fff}
+.col-mgr-panel{background:#fff;border-radius:14px;padding:0;width:420px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);border:var(--border)}
+.col-mgr-header{padding:16px 20px;border-bottom:var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--gray-1)}
+.col-mgr-header h3{font-size:15px;font-weight:620;letter-spacing:-.01em}
+.col-mgr-body{padding:8px 12px;overflow-y:auto;flex:1}
+.col-mgr-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;margin-bottom:2px;transition:background .12s;border:1px solid transparent}
+.col-mgr-row:hover{background:var(--gray-1);border-color:var(--gray-3)}
+.col-mgr-row .drag-handle{cursor:grab;color:var(--gray-5);font-size:14px;user-select:none;padding:0 2px}
+.col-mgr-row .drag-handle:active{cursor:grabbing}
+.col-mgr-row.dragging{opacity:.4}
+.col-mgr-row .col-toggle{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.col-mgr-row .col-name-input{flex:1;border:1px solid transparent;background:transparent;font-size:13px;padding:4px 8px;border-radius:5px;outline:none;transition:all .15s;font-family:var(--font);min-width:0}
+.col-mgr-row .col-name-input:hover{border-color:var(--gray-3)}
+.col-mgr-row .col-name-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-subtle)}
+.col-mgr-row .col-width-input{width:64px;border:1px solid var(--gray-3);background:var(--surface);font-size:12px;padding:4px 6px;border-radius:5px;outline:none;text-align:center;transition:all .15s;font-family:var(--font)}
+.col-mgr-row .col-width-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-subtle)}
+.col-mgr-row .col-width-label{font-size:10px;color:var(--gray-5);width:20px;text-align:left}
+.col-mgr-row .fixed-tag{font-size:9px;color:var(--gray-5);background:var(--gray-2);padding:1px 6px;border-radius:8px;white-space:nowrap}
+.col-mgr-row .del-btn{width:22px;height:22px;border:none;background:transparent;color:var(--gray-5);border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.col-mgr-row .del-btn:hover{background:var(--red-subtle);color:var(--red)}
+.col-mgr-add{padding:8px 10px;border:1px dashed var(--gray-4);border-radius:8px;margin:6px 0;text-align:center;color:var(--gray-6);cursor:pointer;transition:all .12s;font-size:13px}
+.col-mgr-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-subtle)}
+.col-mgr-footer{padding:12px 20px;border-top:var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--gray-1)}
+.col-mgr-footer .hint{font-size:11px;color:var(--gray-5)}
 tbody tr{border-bottom:1px solid var(--gray-2);transition:background var(--transition)}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--surface-hover)}
@@ -385,7 +404,7 @@ function uss(s){let d=document.getElementById('sync-dot'),t=document.getElementB
 // Columns
 const COLS=[{k:'checkbox',l:'\u72b6\u6001',w:'44px',c:true},{k:'dept',l:'\u9700\u6c42\u79d1\u5ba4',w:'120px'},{k:'task',l:'\u5de5\u4f5c\u4efb\u52a1',w:'200px'},{k:'followup',l:'\u8ddf\u8fdb\u5de5\u4f5c',w:'200px'},{k:'startTime',l:'\u5f00\u59cb\u65f6\u95f4',w:'140px'},{k:'completedDate',l:'\u5b9e\u9645\u5b8c\u6210\u65e5\u671f',w:'140px'},{k:'interval',l:'\u65f6\u95f4\u95f4\u9694',w:'100px'},{k:'alarms',l:'\u95f9\u94c3',w:'100px',c:true},{k:'actions',l:'\u64cd\u4f5c',w:'70px',c:true}];
 let cols;
-function lco(){try{let s=localStorage.getItem('taskwb_cols');if(s){let o=JSON.parse(s),nc=[];o.forEach(k=>{let c=COLS.find(c=>c.k===k);if(c)nc.push(c)});COLS.forEach(c=>{if(!nc.find(x=>x.k===c.k))nc.push(c)});return nc}}catch(e){}return[...COLS]}
+function lco(){try{let s=localStorage.getItem('taskwb_cols_full');if(s){let saved=JSON.parse(s);if(Array.isArray(saved)&&saved.length>0){let nc=[];saved.forEach(sc=>{nc.push({...sc})});return nc}}}catch(e){}return[...COLS]}
 cols=lco();
 function sco(){localStorage.setItem('taskwb_cols',JSON.stringify(cols.map(c=>c.k)))}
 // View
@@ -397,7 +416,7 @@ function gwr(){let now=new Date();now.setDate(now.getDate()+wo*7);let day=now.ge
 function rw(){let{mon}=gwr();let sun=new Date(mon);sun.setDate(mon.getDate()+6);document.getElementById('week-title').textContent=mon.getFullYear()+'\u5e74'+(mon.getMonth()+1)+'\u6708'+mon.getDate()+'\u65e5 \u2014 '+(sun.getMonth()+1)+'\u6708'+sun.getDate()+'\u65e5';let grid=document.getElementById('week-grid');let wd=['\u4e00','\u4e8c','\u4e09','\u56db','\u4e94','\u516d','\u65e5'];let today=new Date();today.setHours(0,0,0,0);let ts=today.toISOString().slice(0,10);let h='';for(let i=0;i<7;i++){let d=new Date(mon);d.setDate(mon.getDate()+i);let ds=d.toISOString().slice(0,10),it=ds===ts;let dtk=tasks.filter(t=>{if(!t.startTime)return false;let st=new Date(t.startTime);st.setHours(0,0,0,0);return st.toISOString().slice(0,10)===ds});dtk.sort((a,b)=>(b.important?1:0)-(a.important?1:0));h+='<div class="week-day"><div class="week-day-header'+(it?' today':'')+'"><div>\u5468'+wd[i]+'</div><div class="week-day-date">'+d.getDate()+'</div></div><div class="week-day-body">';if(dtk.length===0)h+='<div class="week-no-task">\u65e0\u4efb\u52a1</div>';else dtk.forEach(t=>{let cls='pending-item',dc='pending';if(t.completed){cls='done-item';dc='done'}if(t.important){cls='important-item';dc='important'}h+='<div class="week-task-item '+cls+'" data-action="est" data-id="'+t.id+'" title="'+eh((t.dept||'')+': '+(t.task||''))+'"><span class="week-task-dot '+dc+'"></span><span class="week-task-text">'+eh((t.dept||'?')+': '+(t.task||''))+'</span></div>'});h+='</div></div>'}grid.innerHTML=h}
 function cwk(n){wo+=n;rw()}function gcw(){wo=0;rw()}
 // Header
-function rh(){let h='<tr>';cols.forEach((c,i)=>{let isLast=i===cols.length-1;h+='<th class="'+(c.c?'center':'')+'" draggable="true" data-col="'+c.k+'" data-idx="'+i+'" style="width:'+c.w+';cursor:grab" title="拖拽调整顺序，拖拽右边线调整宽度"><span style="cursor:grab">'+c.l+'</span><span class="col-resize" data-col="'+c.k+'" data-idx="'+i+'" title="拖动调整宽度"></span></th>'});h+='<th class="center" style="width:50px;cursor:default;background:var(--gray-2)"><span class="col-add" data-action="colmgr" title="添加/管理列" style="cursor:pointer;font-size:16px;color:var(--gray-6);user-select:none">+</span></th></tr>';document.getElementById('table-head').innerHTML=h}
+function rh(){let h='<tr>';cols.forEach((c,i)=>{h+='<th class="'+(c.c?'center':'')+'" draggable="true" data-col="'+c.k+'" data-idx="'+i+'" style="width:'+c.w+'" title="拖拽调整顺序"><span class="col-grip" title="拖拽排序">⋮⋮</span>'+c.l+'<span class="col-resize" data-col="'+c.k+'" data-idx="'+i+'" title="拖动调整宽度"></span></th>'});h+='<th class="center" style="width:46px;background:var(--gray-2)"><span class="col-add" data-action="colmgr" title="列管理">⚙</span></th></tr>';document.getElementById('table-head').innerHTML=h}
 let dc=null;
 function hds(e){dc=e.target.dataset.col;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
 function hdo(e){e.preventDefault();e.target.closest('th')?.classList.add('drag-over')}
@@ -518,7 +537,7 @@ document.addEventListener('click',function(e){rn();
   else if(a==='ecd')ecd(id);else if(a==='ti')ti(id);else if(a==='dt')dt(id);
   else if(a==='rfa')rfa(id);else if(a==='rma')rma(id);
   else if(a==='da')da(id);else if(a==='cfa')cfa(id,tid);
-  else if(a==='colmgr')openColMgr();else if(a==='save-colmgr')saveColMgr();else if(a==='close-colmgr')closeColMgr();
+  else if(a==='colmgr')openColMgr();else if(a==='save-colmgr')saveColMgr();else if(a==='close-colmgr')closeColMgr();else if(a==='add-col')addCustomCol();
 });
 
 // Column resize handler
@@ -545,8 +564,8 @@ document.addEventListener('mouseup',function(){
   }
 });
 
-// Column manager modal
-const ALL_COLS=[
+// Column manager - full rewrite with drag, rename, add, resize
+const BUILTIN_COLS=[
   {k:'checkbox',l:'状态',w:'44px',c:true,fixed:true},
   {k:'dept',l:'需求科室',w:'120px'},
   {k:'task',l:'工作任务',w:'200px'},
@@ -557,42 +576,78 @@ const ALL_COLS=[
   {k:'alarms',l:'闹铃',w:'100px',c:true},
   {k:'actions',l:'操作',w:'70px',c:true,fixed:true}
 ];
+let _colMgrData=null;
 function openColMgr(){
-  let body='<div class="col-manager"><h3>列管理</h3>';
-  ALL_COLS.forEach(c=>{
-    let active=cols.find(x=>x.k===c.k);
-    let checked=active?'checked':'';
-    let disabled=c.fixed?'disabled':'';
-    let w=active?active.w:c.w;
-    body+='<div class="col-item"><input type="checkbox" data-col-key="'+c.k+'" data-col-label="'+c.l+'" data-col-w="'+c.w+'" data-col-c="'+!!c.c+'" '+checked+' '+disabled+'><div class="name">'+c.l+(c.fixed?' <span style="font-size:10px;color:var(--gray-5)">固定</span>':'')+'</div><input type="text" class="width-input" data-col-width-key="'+c.k+'" value="'+w+'" placeholder="宽度"></div>';
+  _colMgrData=cols.map(c=>({...c}));
+  renderColMgr();
+}
+function renderColMgr(){
+  let existing=document.getElementById('colmgr-modal');
+  if(existing)existing.remove();
+  let rows='';
+  _colMgrData.forEach((c,i)=>{
+    let isBuiltin=BUILTIN_COLS.find(b=>b.k===c.k);
+    rows+='<div class="col-mgr-row" data-idx="'+i+'" draggable="true">'+
+      '<span class="drag-handle" title="拖拽排序">⠿</span>'+
+      '<input type="checkbox" class="col-toggle" data-idx="'+i+'" '+(c.visible!==false?'checked':'')+'>'+
+      '<input type="text" class="col-name-input" data-idx="'+i+'" value="'+eh(c.l)+'" placeholder="列名"'+(c.fixed?'disabled':'')+'>'+
+      '<input type="text" class="col-width-input" data-idx="'+i+'" value="'+parseInt(c.w)+'" placeholder="px">'+
+      '<span class="col-width-label">px</span>'+
+      (c.fixed?'<span class="fixed-tag">固定</span>':'<button class="del-btn" data-del-idx="'+i+'" title="删除列">×</button>')+
+      '</div>';
   });
-  body+='<div class="actions"><button class="btn btn-outline" data-action="close-colmgr">取消</button><button class="btn btn-primary" data-action="save-colmgr">保存</button></div></div>';
+  let html2='<div class="col-mgr-panel">'+
+    '<div class="col-mgr-header"><h3>列管理</h3><button class="modal-close" onclick="closeColMgr()">×</button></div>'+
+    '<div class="col-mgr-body" id="colmgr-body">'+rows+
+    '<div class="col-mgr-add" data-action="add-col">+ 添加自定义列</div>'+
+    '</div>'+
+    '<div class="col-mgr-footer"><span class="hint">勾选=显示 · 拖拽=排序 · 可改名调宽</span><div><button class="btn btn-outline" data-action="close-colmgr">取消</button> <button class="btn btn-primary" data-action="save-colmgr">保存</button></div></div>'+
+    '</div>';
   let modal=document.createElement('div');modal.className='modal-overlay show';modal.id='colmgr-modal';
-  modal.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%"><div style="background:#fff;border-radius:14px;padding:8px">'+body+'</div></div>';
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove()});
+  modal.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:20px">'+html2+'</div>';
+  modal.addEventListener('click',e=>{if(e.target===modal)closeColMgr()});
   document.body.appendChild(modal);
+  // Bind row events
+  let body=modal.querySelector('#colmgr-body');
+  body.querySelectorAll('.col-mgr-row').forEach(row=>{
+    row.addEventListener('dragstart',e=>{row.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
+    row.addEventListener('dragend',()=>row.classList.remove('dragging'));
+    row.addEventListener('dragover',e=>{e.preventDefault();let r=e.target.closest('.col-mgr-row');if(r&&r!==row){let rect=r.getBoundingClientRect();let after=e.clientY>rect.top+rect.height/2;body.insertBefore(row,after?r.nextSibling:r)}});
+  });
+  // Bind name input
+  body.querySelectorAll('.col-name-input').forEach(inp=>{
+    inp.addEventListener('change',e=>{let i=parseInt(e.target.dataset.idx);_colMgrData[i].l=e.target.value||'列'+(i+1)});
+  });
+  // Bind width input
+  body.querySelectorAll('.col-width-input').forEach(inp=>{
+    inp.addEventListener('change',e=>{let i=parseInt(e.target.dataset.idx);let v=parseInt(e.target.value)||100;_colMgrData[i].w=v+'px'});
+  });
+  // Bind toggle
+  body.querySelectorAll('.col-toggle').forEach(cb=>{
+    cb.addEventListener('change',e=>{let i=parseInt(e.target.dataset.idx);_colMgrData[i].visible=e.target.checked});
+  });
+  // Bind delete
+  body.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{let i=parseInt(e.target.dataset.delIdx);_colMgrData.splice(i,1);renderColMgr()});
+  });
+}
+function addCustomCol(){
+  let n=1;while(_colMgrData.find(c=>c.k==='custom'+n))n++;
+  _colMgrData.push({k:'custom'+n,l:'新列'+n,w:'120px',visible:true,custom:true});
+  renderColMgr();
+  // Focus the new row's name input
+  setTimeout(()=>{let inputs=document.querySelectorAll('.col-name-input');if(inputs.length>0)inputs[inputs.length-1].focus()},50);
 }
 function saveColMgr(){
-  let modal=document.getElementById('colmgr-modal');if(!modal)return;
-  let newCols=[];
-  modal.querySelectorAll('input[type=checkbox][data-col-key]').forEach(cb=>{
-    if(cb.checked){
-      let k=cb.dataset.colKey;
-      let orig=ALL_COLS.find(c=>c.k===k);
-      let existing=cols.find(x=>x.k===k);
-      let wInput=modal.querySelector('input[data-col-width-key="'+k+'"]');
-      let w=wInput?wInput.value:orig.w;
-      newCols.push({k:orig.k,l:orig.l,w:w,c:orig.c||false,fixed:orig.fixed});
-    }
-  });
+  // Filter visible cols
+  let newCols=_colMgrData.filter(c=>c.visible!==false);
   if(newCols.length===0){st('至少保留一列','error');return}
-  // Preserve order: for each new col, find existing in original order
   cols=newCols;
-  sco();rh();rt();
-  modal.remove();
-  st('列配置已保存');
+  // Save column config (including names and widths) to localStorage
+  try{localStorage.setItem('taskwb_cols_full',JSON.stringify(cols.map(c=>({k:c.k,l:c.l,w:c.w,c:c.c||false,fixed:c.fixed}))))}catch(e){}
+  sco();rh();rt();closeColMgr();st('列配置已保存');
 }
-function closeColMgr(){let m=document.getElementById('colmgr-modal');if(m)m.remove()}
+function closeColMgr(){let m=document.getElementById('colmgr-modal');if(m)m.remove();_colMgrData=null}
 window.addEventListener('beforeunload',sth);
 </script>
 </body>
